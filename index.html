@@ -3,57 +3,593 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home ABA - 가정 내 언어행동 중재 시스템</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <title>ABA 언어 행동 훈련 앱</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* 학생 이름 입력 화면 */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .login-card h2 { margin-bottom: 1.5rem; color: var(--primary); }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: transform 0.1s, opacity 0.2s;
+            padding: 12px 20px;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-start {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            font-size: 1.2rem;
+        }
+
+        /* 메인 레이아웃 */
+        #app { display: none; padding-bottom: 50px; }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .student-badge {
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-item {
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* 맨드 섹션 */
+        .mand-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-delete { background: var(--danger); color: white; padding: 5px 10px; }
+
+        /* 텍트 섹션 */
+        .tact-display {
+            font-size: 10rem;
+            margin: 2rem 0;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f4f8;
+            border-radius: 20px;
+        }
+
+        .tact-name { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; }
+
+        /* 에코익 섹션 */
+        .echoic-target { font-size: 3rem; margin: 1.5rem 0; color: var(--primary); font-weight: 800; }
+
+        /* 인트라버벌 섹션 */
+        .intraverbal-box {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            margin: 20px 0;
+            border: 2px dashed #adb5bd;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .timer-display { font-size: 1.2rem; color: var(--danger); font-weight: bold; margin-bottom: 10px; }
+
+        /* 공통 결과 버튼 */
+        .result-group { display: flex; gap: 10px; justify-content: center; margin-top: 2rem; }
+        .btn-success { background: var(--success); color: white; font-size: 1.1rem; flex: 1; height: 60px; }
+        .btn-fail { background: var(--danger); color: white; font-size: 1.1rem; flex: 1; height: 60px; }
+        .btn-guide { background: var(--warning); color: #2c3e50; font-size: 1.1rem; width: 100%; height: 60px; margin-bottom: 10px; }
+
+        /* 기록 테이블 */
+        .history-controls { margin-bottom: 1rem; display: flex; gap: 10px; }
+        .history-table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+
+        /* 토스트 알림 */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 10px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1001;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 1.1rem;
+        }
+
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-    <header class="app-header">
-        <h1>Home ABA</h1>
-        <div class="session-timer" id="sessionTimer">00:00</div>
-    </header>
 
-    <main id="app-content">
-        <!-- Content will be injected here via main.js -->
-        <div id="view-container"></div>
-    </main>
+    <!-- 학생 이름 입력 -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2>ABA 훈련 시작</h2>
+            <input type="text" id="student-name-input" placeholder="학생 이름을 입력하세요" autocomplete="off">
+            <button class="btn-start" onclick="startApp()">훈련 시작하기</button>
+        </div>
+    </div>
 
-    <nav class="bottom-nav">
-        <button class="nav-item active" data-view="mand">
-            <span class="icon">🎁</span>
-            <span class="label">맨드</span>
-        </button>
-        <button class="nav-item" data-view="tact">
-            <span class="icon">📸</span>
-            <span class="label">택트</span>
-        </button>
-        <button class="nav-item" data-view="echoic">
-            <span class="icon">🗣️</span>
-            <span class="label">에코익</span>
-        </button>
-        <button class="nav-item" data-view="intraverbal">
-            <span class="icon">💬</span>
-            <span class="label">대답</span>
-        </button>
-        <button class="nav-item" data-view="dashboard">
-            <span class="icon">📊</span>
-            <span class="label">기록</span>
-        </button>
-    </nav>
+    <!-- 메인 앱 -->
+    <div id="app">
+        <header>
+            <h1>ABA 훈련 매니저</h1>
+            <div class="student-badge">현재 학생: <span id="display-student-name"></span></div>
+        </header>
 
-    <!-- Firebase SDK (Modular) -->
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@latest/build/three.module.js",
-        "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
-        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
-      }
-    }
+        <nav>
+            <div class="nav-item active" onclick="switchTab('mand', this)">맨드</div>
+            <div class="nav-item" onclick="switchTab('tact', this)">텍트</div>
+            <div class="nav-item" onclick="switchTab('echoic', this)">에코익</div>
+            <div class="nav-item" onclick="switchTab('intraverbal', this)">대답</div>
+            <div class="nav-item" onclick="switchTab('history', this)">기록</div>
+        </nav>
+
+        <div class="container">
+            <!-- 맨드 (Mand) -->
+            <section id="sec-mand" class="tab-content">
+                <div class="card">
+                    <h2>요구하기 (Mand)</h2>
+                    <p style="margin-bottom: 1rem;">아이가 요구하는 항목을 기록하세요.</p>
+                    <div style="display: flex; gap: 5px; margin-bottom: 1.5rem;">
+                        <input type="text" id="mand-new-item" placeholder="새 항목 추가" style="margin-bottom: 0;">
+                        <button onclick="addMandItem()" style="background: var(--primary); color: white;">추가</button>
+                    </div>
+                    <div id="mand-list">
+                        <!-- 항목들 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 텍트 (Tact) -->
+            <section id="sec-tact" class="tab-content hidden">
+                <div class="card">
+                    <h2>명명하기 (Tact)</h2>
+                    <div id="tact-display" class="tact-display">🍎</div>
+                    <div id="tact-name" class="tact-name">사과</div>
+                    <div class="result-group">
+                        <button class="btn-fail" onclick="recordTact('실패')">실패</button>
+                        <button class="btn-success" onclick="recordTact('성공')">성공</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 에코익 (Echoic) -->
+            <section id="sec-echoic" class="tab-content hidden">
+                <div class="card">
+                    <h2>모방하기 (Echoic)</h2>
+                    <div id="echoic-target" class="echoic-target">사과</div>
+                    <button class="btn-guide" onclick="playEchoicTTS()">🔊 가이드 듣기</button>
+                    <div class="result-group">
+                        <button class="btn-fail" onclick="recordEchoic('실패')">실패</button>
+                        <button class="btn-success" onclick="recordEchoic('성공')">성공</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 대답 (Intraverbal) -->
+            <section id="sec-intraverbal" class="tab-content hidden">
+                <div class="card">
+                    <h2>인트라버벌 (대답하기)</h2>
+                    <p id="intraverbal-question" style="font-size: 1.2rem; font-weight: bold;"></p>
+                    <div id="intraverbal-answer-box" class="intraverbal-box"></div>
+                    <div id="intra-timer" class="timer-display">경과 시간: 0.0s</div>
+                    <button id="intra-start-btn" class="btn-guide" onclick="startIntraverbal()">훈련 시작 (타이머 작동)</button>
+                    <div class="result-group">
+                        <button id="intra-fail-btn" class="btn-fail" onclick="recordIntraverbal('실패')">실패</button>
+                        <button id="intra-success-btn" class="btn-success" onclick="recordIntraverbal('성공')">성공</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 기록 (History) -->
+            <section id="sec-history" class="tab-content hidden">
+                <div class="card" style="text-align: left;">
+                    <h2>훈련 기록</h2>
+                    <div class="history-controls">
+                        <input type="text" id="filter-name" placeholder="학생 이름 검색..." oninput="renderHistory()">
+                        <select id="filter-type" onchange="renderHistory()" style="padding: 10px; border-radius: 10px; border: 2px solid #ddd;">
+                            <option value="all">전체 유형</option>
+                            <option value="맨드">맨드</option>
+                            <option value="텍트">텍트</option>
+                            <option value="에코익">에코익</option>
+                            <option value="대답">대답</option>
+                        </select>
+                        <button onclick="clearAllData()" style="background: var(--danger); color: white;">전체 삭제</button>
+                    </div>
+                    <div class="history-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>학생</th>
+                                    <th>유형</th>
+                                    <th>항목/질문</th>
+                                    <th>결과</th>
+                                    <th>지연</th>
+                                    <th>시간</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <!-- 데이터 로드 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="toast">기록되었습니다.</div>
+
+    <script>
+        // --- 데이터 관리 ---
+        let currentStudent = "";
+        let logs = JSON.parse(localStorage.getItem('aba_logs')) || [];
+        let mandItems = JSON.parse(localStorage.getItem('aba_mand_items')) || ['물', '우유', '과자', '장난감'];
+
+        // --- 텍트 데이터 ---
+        const tactData = [
+            { icon: '🍎', name: '사과' },
+            { icon: '🍇', name: '포도' },
+            { icon: '🚗', name: '자동차' },
+            { icon: '✏️', name: '연필' },
+            { icon: '🥛', name: '컵' },
+            { icon: '🐶', name: '강아지' }
+        ];
+        let currentTactIdx = 0;
+
+        // --- 인트라버벌 데이터 ---
+        const intraData = [
+            { q: '"반짝 반짝 작은..."', a: '별' },
+            { q: '"멍멍 소리를 내는..."', a: '강아지' },
+            { q: '"밥을 먹을 때 쓰는..."', a: '숟가락' },
+            { q: '"어흥 하는 소리는..."', a: '사자' },
+            { q: '"머리 어깨 무릎..."', a: '발' }
+        ];
+        let currentIntraIdx = 0;
+        let intraTimer = null;
+        let intraStartTime = 0;
+        let intraTimeout = null;
+
+        // --- 초기화 및 화면 전환 ---
+        function startApp() {
+            const nameInput = document.getElementById('student-name-input');
+            if (!nameInput.value.trim()) {
+                alert("학생 이름을 입력해주세요.");
+                return;
+            }
+            currentStudent = nameInput.value.trim();
+            document.getElementById('display-student-name').innerText = currentStudent;
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            initMand();
+            nextTact();
+            nextEchoic();
+            nextIntraverbal();
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+            document.getElementById('sec-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            if(tabId === 'history') renderHistory();
+            
+            // 인트라버벌 타이머 초기화 (탭 전환 시)
+            if(tabId !== 'intraverbal') resetIntraverbalState();
+        }
+
+        // --- 맨드 (Mand) ---
+        function initMand() {
+            const list = document.getElementById('mand-list');
+            list.innerHTML = '';
+            mandItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'mand-item';
+                div.innerHTML = `
+                    <span>${item}</span>
+                    <div>
+                        <button onclick="recordMand('${item}', '성공')" style="background:var(--success); color:white; margin-right:5px;">성공</button>
+                        <button onclick="recordMand('${item}', '실패')" style="background:var(--warning); color:white; margin-right:5px;">실패</button>
+                        <button class="btn-delete" onclick="deleteMandItem(${index})">삭제</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function addMandItem() {
+            const input = document.getElementById('mand-new-item');
+            if (input.value.trim()) {
+                mandItems.push(input.value.trim());
+                localStorage.setItem('aba_mand_items', JSON.stringify(mandItems));
+                input.value = '';
+                initMand();
+            }
+        }
+
+        function deleteMandItem(index) {
+            mandItems.splice(index, 1);
+            localStorage.setItem('aba_mand_items', JSON.stringify(mandItems));
+            initMand();
+        }
+
+        function recordMand(item, result) {
+            saveLog('맨드', item, result, '-');
+            showToast();
+        }
+
+        // --- 텍트 (Tact) ---
+        function nextTact() {
+            currentTactIdx = Math.floor(Math.random() * tactData.length);
+            const item = tactData[currentTactIdx];
+            document.getElementById('tact-display').innerText = item.icon;
+            document.getElementById('tact-name').innerText = item.name;
+        }
+
+        function recordTact(result) {
+            const item = tactData[currentTactIdx].name;
+            saveLog('텍트', item, result, '-');
+            showToast();
+            nextTact();
+        }
+
+        // --- 에코익 (Echoic) ---
+        function nextEchoic() {
+            const item = tactData[Math.floor(Math.random() * tactData.length)].name;
+            document.getElementById('echoic-target').innerText = item;
+        }
+
+        function playEchoicTTS() {
+            const text = document.getElementById('echoic-target').innerText;
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ko-KR';
+            window.speechSynthesis.speak(msg);
+        }
+
+        function recordEchoic(result) {
+            const item = document.getElementById('echoic-target').innerText;
+            saveLog('에코익', item, result, '-');
+            showToast();
+            nextEchoic();
+        }
+
+        // --- 인트라버벌 (Intraverbal) ---
+        function nextIntraverbal() {
+            resetIntraverbalState();
+            currentIntraIdx = Math.floor(Math.random() * intraData.length);
+            const data = intraData[currentIntraIdx];
+            document.getElementById('intraverbal-question').innerText = data.q;
+            document.getElementById('intraverbal-answer-box').innerText = data.a;
+        }
+
+        function resetIntraverbalState() {
+            clearInterval(intraTimer);
+            clearTimeout(intraTimeout);
+            document.getElementById('intra-timer').innerText = '경과 시간: 0.0s';
+            document.getElementById('intra-start-btn').disabled = false;
+        }
+
+        function startIntraverbal() {
+            document.getElementById('intra-start-btn').disabled = true;
+            intraStartTime = Date.now();
+            intraTimer = setInterval(() => {
+                const elapsed = (Date.now() - intraStartTime) / 1000;
+                document.getElementById('intra-timer').innerText = `경과 시간: ${elapsed.toFixed(1)}s`;
+            }, 100);
+
+            // 10초 타임아웃
+            intraTimeout = setTimeout(() => {
+                recordIntraverbal('실패', true);
+            }, 10000);
+        }
+
+        function recordIntraverbal(result, isTimeout = false) {
+            if (!isTimeout && !intraStartTime && result === '성공') {
+                alert("시작 버튼을 먼저 눌러주세요.");
+                return;
+            }
+
+            const elapsed = intraStartTime ? ((Date.now() - intraStartTime) / 1000).toFixed(1) + 's' : '-';
+            const question = intraData[currentIntraIdx].q;
+            
+            clearInterval(intraTimer);
+            clearTimeout(intraTimeout);
+
+            saveLog('대답', question, result, elapsed);
+            showToast(isTimeout ? "10초 경과: 실패로 기록되었습니다." : "기록되었습니다.");
+            
+            intraStartTime = 0;
+            nextIntraverbal();
+        }
+
+        // --- 공통 로그 시스템 ---
+        function saveLog(type, item, result, latency) {
+            const entry = {
+                student: currentStudent,
+                type: type,
+                item: item,
+                result: result,
+                latency: latency,
+                timestamp: new Date().toLocaleString()
+            };
+            logs.unshift(entry);
+            localStorage.setItem('aba_logs', JSON.stringify(logs));
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('history-tbody');
+            const filterName = document.getElementById('filter-name').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+            
+            tbody.innerHTML = '';
+            
+            const filtered = logs.filter(log => {
+                const nameMatch = log.student.toLowerCase().includes(filterName);
+                const typeMatch = filterType === 'all' || log.type === filterType;
+                return nameMatch && typeMatch;
+            });
+
+            filtered.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.student}</td>
+                    <td>${log.type}</td>
+                    <td>${log.item}</td>
+                    <td style="color: ${log.result === '성공' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${log.result}</td>
+                    <td>${log.latency}</td>
+                    <td style="font-size: 0.8rem; color: #666;">${log.timestamp}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearAllData() {
+            if(confirm("정말로 모든 기록을 삭제하시겠습니까?")) {
+                logs = [];
+                localStorage.removeItem('aba_logs');
+                renderHistory();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            if(msg) t.innerText = msg;
+            else t.innerText = "기록되었습니다.";
+            t.className = "show";
+            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+        }
+
     </script>
-    <script type="module" src="main.js"></script>
 </body>
 </html>
